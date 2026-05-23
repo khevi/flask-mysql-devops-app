@@ -1,0 +1,27 @@
+services:
+  web:
+    build: .
+    container_name: flask-web
+    ports:
+      - "8080:5000"
+    environment:
+      DB_HOST: db
+      DB_USER: devops
+      DB_PASSWORD: devopspass
+      DB_NAME: devopsdb
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: flask-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: devopsdb
+      MYSQL_USER: devops
+      MYSQL_PASSWORD: devopspass
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:

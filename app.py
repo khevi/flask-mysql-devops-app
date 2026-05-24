@@ -75,7 +75,7 @@ def home():
         <div class="status">Database Connected Successfully ✅</div>
         <p>
             This Flask application is running inside Docker, connected to MySQL,
-            deployed through Jenkins, and managed with Docker Compose and this is automatically.
+            deployed through Jenkins, and managed with Docker Compose.
         </p>
         <div class="badge">CI/CD Pipeline Active</div>
     </div>

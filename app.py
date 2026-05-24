@@ -51,14 +51,72 @@ def home():
         f"""
         <li>
             <span>{name}</span>
-            <form method="POST" action="/delete/{visitor_id}" style="display:inline;">
-                <button class="delete-btn" type="submit">Delete</button>
-            </form>
+            <div>
+                <a class="edit-btn" href="/edit/{visitor_id}">Edit</a>
+                <form method="POST" action="/delete/{visitor_id}" style="display:inline;">
+                    <button class="delete-btn" type="submit">Delete</button>
+                </form>
+            </div>
         </li>
         """
         for visitor_id, name in visitors
     ])
 
+    return page_template(f"""
+        <h1>🚀 Kossi DevOps CRUD Lab</h1>
+        <p>Flask + MySQL + Docker Compose + Jenkins + Nginx</p>
+
+        <form method="POST">
+            <input type="text" name="name" placeholder="Enter your name" required>
+            <button type="submit">Save</button>
+        </form>
+
+        <h2>Saved Visitors</h2>
+        <ul>{visitor_list}</ul>
+    """)
+
+@app.route("/edit/<int:visitor_id>", methods=["GET", "POST"])
+def edit(visitor_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    if request.method == "POST":
+        new_name = request.form.get("name")
+        cursor.execute("UPDATE visitors SET name = %s WHERE id = %s", (new_name, visitor_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return redirect("/")
+
+    cursor.execute("SELECT name FROM visitors WHERE id = %s", (visitor_id,))
+    visitor = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not visitor:
+        return redirect("/")
+
+    return page_template(f"""
+        <h1>✏️ Edit Visitor</h1>
+        <form method="POST">
+            <input type="text" name="name" value="{visitor[0]}" required>
+            <button type="submit">Update</button>
+        </form>
+        <br>
+        <a class="back-btn" href="/">Back</a>
+    """)
+
+@app.route("/delete/<int:visitor_id>", methods=["POST"])
+def delete(visitor_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM visitors WHERE id = %s", (visitor_id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return redirect("/")
+
+def page_template(content):
     return f"""
     <!DOCTYPE html>
     <html>
@@ -73,7 +131,7 @@ def home():
                 padding: 60px;
             }}
             .card {{
-                max-width: 750px;
+                max-width: 800px;
                 margin: auto;
                 background: rgba(255,255,255,0.12);
                 padding: 40px;
@@ -87,14 +145,16 @@ def home():
                 border: none;
                 font-size: 18px;
             }}
-            button {{
-                padding: 14px 25px;
+            button, .edit-btn, .back-btn {{
+                padding: 10px 18px;
                 border: none;
                 border-radius: 10px;
                 background: #00ffae;
+                color: #06121f;
                 font-weight: bold;
                 cursor: pointer;
-                font-size: 18px;
+                font-size: 15px;
+                text-decoration: none;
             }}
             ul {{
                 list-style: none;
@@ -106,7 +166,7 @@ def home():
                 margin: 10px auto;
                 padding: 12px;
                 border-radius: 10px;
-                width: 70%;
+                width: 75%;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
@@ -114,39 +174,16 @@ def home():
             .delete-btn {{
                 background: #ff4d4d;
                 color: white;
-                padding: 8px 14px;
-                font-size: 14px;
             }}
         </style>
     </head>
     <body>
         <div class="card">
-            <h1>🚀 Kossi DevOps CRUD Lab</h1>
-            <p>Flask + MySQL + Docker Compose + Jenkins + Nginx</p>
-
-            <form method="POST">
-                <input type="text" name="name" placeholder="Enter your name" required>
-                <button type="submit">Save</button>
-            </form>
-
-            <h2>Saved Visitors</h2>
-            <ul>
-                {visitor_list}
-            </ul>
+            {content}
         </div>
     </body>
     </html>
     """
-
-@app.route("/delete/<int:visitor_id>", methods=["POST"])
-def delete(visitor_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM visitors WHERE id = %s", (visitor_id,))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    return redirect("/")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

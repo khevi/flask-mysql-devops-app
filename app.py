@@ -42,12 +42,22 @@ def home():
 
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT name FROM visitors ORDER BY id DESC")
+    cursor.execute("SELECT id, name FROM visitors ORDER BY id DESC")
     visitors = cursor.fetchall()
     cursor.close()
     conn.close()
 
-    visitor_list = "".join([f"<li>{v[0]}</li>" for v in visitors])
+    visitor_list = "".join([
+        f"""
+        <li>
+            <span>{name}</span>
+            <form method="POST" action="/delete/{visitor_id}" style="display:inline;">
+                <button class="delete-btn" type="submit">Delete</button>
+            </form>
+        </li>
+        """
+        for visitor_id, name in visitors
+    ])
 
     return f"""
     <!DOCTYPE html>
@@ -63,7 +73,7 @@ def home():
                 padding: 60px;
             }}
             .card {{
-                max-width: 700px;
+                max-width: 750px;
                 margin: auto;
                 background: rgba(255,255,255,0.12);
                 padding: 40px;
@@ -96,7 +106,16 @@ def home():
                 margin: 10px auto;
                 padding: 12px;
                 border-radius: 10px;
-                width: 60%;
+                width: 70%;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }}
+            .delete-btn {{
+                background: #ff4d4d;
+                color: white;
+                padding: 8px 14px;
+                font-size: 14px;
             }}
         </style>
     </head>
@@ -118,6 +137,16 @@ def home():
     </body>
     </html>
     """
+
+@app.route("/delete/<int:visitor_id>", methods=["POST"])
+def delete(visitor_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM visitors WHERE id = %s", (visitor_id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return redirect("/")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

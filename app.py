@@ -1,89 +1,123 @@
-from flask import Flask
+from flask import Flask, request, redirect
 import mysql.connector
 import os
 
 app = Flask(__name__)
 
-@app.route("/")
-def home():
-    try:
-        conn = mysql.connector.connect(
-            host=os.getenv("DB_HOST", "db"),
-            user=os.getenv("DB_USER", "devops"),
-            password=os.getenv("DB_PASSWORD", "devopspass"),
-            database=os.getenv("DB_NAME", "devopsdb")
+def get_db_connection():
+    return mysql.connector.connect(
+        host=os.getenv("DB_HOST", "db"),
+        user=os.getenv("DB_USER", "devops"),
+        password=os.getenv("DB_PASSWORD", "devopspass"),
+        database=os.getenv("DB_NAME", "devopsdb")
+    )
+
+def init_db():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS visitors (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL
         )
-        conn.close()
-        return """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Kossi DevOps Lab</title>
-    <style>
-        body {
-            margin: 0;
-            height: 100vh;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #06121f, #0f5132, #00c896);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-        }
+    """)
+    conn.commit()
+    cursor.close()
+    conn.close()
 
-        .card {
-            background: rgba(255, 255, 255, 0.12);
-            padding: 50px;
-            border-radius: 25px;
-            text-align: center;
-            box-shadow: 0 0 40px rgba(0, 255, 170, 0.45);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            max-width: 700px;
-        }
+@app.route("/", methods=["GET", "POST"])
+def home():
+    init_db()
 
-        h1 {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
+    if request.method == "POST":
+        name = request.form.get("name")
+        if name:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO visitors (name) VALUES (%s)", (name,))
+            conn.commit()
+            cursor.close()
+            conn.close()
+        return redirect("/")
 
-        .status {
-            color: #9cffc7;
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM visitors ORDER BY id DESC")
+    visitors = cursor.fetchall()
+    cursor.close()
+    conn.close()
 
-        p {
-            font-size: 18px;
-            line-height: 1.6;
-        }
+    visitor_list = "".join([f"<li>{v[0]}</li>" for v in visitors])
 
-        .badge {
-            display: inline-block;
-            margin-top: 25px;
-            padding: 12px 25px;
-            background: #00ffae;
-            color: #06121f;
-            border-radius: 30px;
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h1>🚀 I'm The Best Creating this pipeline</h1>
-        <div class="status">Database Connected Successfully ✅</div>
-        <p>
-            This Flask application is running inside Docker, connected to MySQL,
-            deployed through Jenkins, and managed with Docker Compose so exicted about the next steps Automatic webhook deployment test.
-        </p>
-        <div class="badge">CI/CD Pipeline Active</div>
-    </div>
-</body>
-</html>
-"""
-    except Exception as e:
-        return f"<h1>Database Connection Failed</h1><p>{e}</p>"
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Kossi DevOps CRUD Lab</title>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                background: linear-gradient(135deg, #06121f, #0f5132, #00c896);
+                color: white;
+                text-align: center;
+                padding: 60px;
+            }}
+            .card {{
+                max-width: 700px;
+                margin: auto;
+                background: rgba(255,255,255,0.12);
+                padding: 40px;
+                border-radius: 25px;
+                box-shadow: 0 0 35px rgba(0,255,170,0.35);
+            }}
+            input {{
+                padding: 14px;
+                width: 60%;
+                border-radius: 10px;
+                border: none;
+                font-size: 18px;
+            }}
+            button {{
+                padding: 14px 25px;
+                border: none;
+                border-radius: 10px;
+                background: #00ffae;
+                font-weight: bold;
+                cursor: pointer;
+                font-size: 18px;
+            }}
+            ul {{
+                list-style: none;
+                padding: 0;
+                margin-top: 30px;
+            }}
+            li {{
+                background: rgba(255,255,255,0.18);
+                margin: 10px auto;
+                padding: 12px;
+                border-radius: 10px;
+                width: 60%;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h1>🚀 Kossi DevOps CRUD Lab</h1>
+            <p>Flask + MySQL + Docker Compose + Jenkins + Nginx</p>
+
+            <form method="POST">
+                <input type="text" name="name" placeholder="Enter your name" required>
+                <button type="submit">Save</button>
+            </form>
+
+            <h2>Saved Visitors</h2>
+            <ul>
+                {visitor_list}
+            </ul>
+        </div>
+    </body>
+    </html>
+    """
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

@@ -71,7 +71,7 @@ def home():
 </head>
 <body>
     <div class="card">
-        <h1>🚀 David Hevi DevOps Lab</h1>
+        <h1>🚀 I'm The Best Creating this pipeline</h1>
         <div class="status">Database Connected Successfully ✅</div>
         <p>
             This Flask application is running inside Docker, connected to MySQL,

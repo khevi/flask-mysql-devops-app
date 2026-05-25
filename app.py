@@ -64,7 +64,7 @@ def home():
 
     return page_template(f"""
         <h1>🚀 Kossi DevOps CRUD Lab</h1>
-        <p>Flask + MySQL + Docker Compose + Jenkins + Nginx</p>
+        <p>Flask + MySQL + k8s + Jenkins + Nginx</p>
 
         <form method="POST">
             <input type="text" name="name" placeholder="Enter your name" required>

@@ -187,7 +187,7 @@ def page_template(content):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-    @app.route("/health")
+@app.route("/health")
 def health():
     try:
         conn = get_db_connection()
@@ -195,7 +195,7 @@ def health():
         return {"status": "healthy", "database": "connected"}, 200
     except Exception as e:
         return {"status": "unhealthy", "error": str(e)}, 500
-    
-    if __name__ == "__main__":
-        app.run(host="0.0.0.0", port=5000)
-    
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)

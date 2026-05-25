@@ -14,6 +14,7 @@ spec:
     spec:
       containers:
       - name: flask-app
-        image: khevi/flask-mysql-devops-app:latest
+        image: flask-mysql-devops-app:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 5000

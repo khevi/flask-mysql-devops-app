@@ -34,12 +34,11 @@ services:
       - web
 
   grafana:
-    image: grafana/grafana
-    container_name: grafana
+   node-exporter:
+    image: prom/node-exporter
+    container_name: node-exporter
     ports:
-      - "3000:3000"
-    depends_on:
-      - prometheus
+      - "9100:9100"
 
 volumes:
   mysql_data:

@@ -32,9 +32,13 @@ services:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     depends_on:
       - web
-
   grafana:
-   node-exporter:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+
+  node-exporter:
     image: prom/node-exporter
     container_name: node-exporter
     ports:
